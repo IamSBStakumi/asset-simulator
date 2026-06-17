@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	returnrate "github.com/IamSBStakumi/asset-simulator/internal/modules/returnrate/interface"
 	simulation "github.com/IamSBStakumi/asset-simulator/internal/modules/simulation/interface"
 )
 
@@ -13,6 +14,17 @@ func RunCLI(args []string, writer io.Writer) error {
 		return err
 	}
 
+	switch config.Mode {
+	case cliModeSimulation:
+		return runSimulation(config, writer)
+	case cliModeReturnRate:
+		return runReturnRateCalculation(config, writer)
+	default:
+		return fmt.Errorf("未対応のモードです: %s", config.Mode)
+	}
+}
+
+func runSimulation(config cliConfig, writer io.Writer) error {
 	simulator := simulation.NewHandler()
 
 	if _, err := fmt.Fprintln(writer, "Future Assets Simulator"); err != nil {
@@ -45,4 +57,31 @@ func RunCLI(args []string, writer io.Writer) error {
 	}
 
 	return nil
+}
+
+func runReturnRateCalculation(config cliConfig, writer io.Writer) error {
+	calculator := returnrate.NewHandler()
+
+	if _, err := fmt.Fprintln(writer, "Return Rate Calculator"); err != nil {
+		return err
+	}
+
+	response, err := calculator.Calculate(returnrate.Request{
+		PrincipalAmount:     config.Principal,
+		CurrentProfit:       config.CurrentProfit,
+		AccumulatedMonths:   config.AccumulatedMonths,
+		MonthlyContribution: config.MonthlyContribution,
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(
+		writer,
+		"月利: %.6f%%\n年利: %.6f%%\n",
+		response.MonthlyYieldRate,
+		response.AnnualYieldRate,
+	)
+
+	return err
 }
