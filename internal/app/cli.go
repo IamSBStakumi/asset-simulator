@@ -15,7 +15,7 @@ func RunCLI(args []string, writer io.Writer) error {
 
 	simulator := simulation.NewHandler()
 
-	if _, err := fmt.Println(writer, "Future Assets Simulator"); err != nil {
+	if _, err := fmt.Fprintln(writer, "Future Assets Simulator"); err != nil {
 		return err
 	}
 
