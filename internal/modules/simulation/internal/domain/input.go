@@ -1,6 +1,9 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"math"
+)
 
 type SimulationInput struct {
 	PrincipalAmount       int64   // 現在の元本
@@ -12,7 +15,7 @@ type SimulationInput struct {
 }
 
 func DefaultProjectionYears() []int {
-	return []int{1, 3, 5, 10, 20, 30}
+	return []int{1, 3, 5, 10, 20, 30, 40}
 }
 
 // 未指定の入力値にデフォルト値を補完する
@@ -42,8 +45,8 @@ func (input SimulationInput) Validate() error {
 		return errors.New("毎月の積立額は0以上で入力してください")
 	}
 
-	if input.AnnualYieldPercentage < 0 {
-		return errors.New("年利は0以上で入力してください")
+	if input.AnnualYieldPercentage <= -100 {
+		return errors.New("年利は-100より大きい値で入力してください")
 	}
 
 	for _, year := range input.ProjectionYears {
@@ -62,5 +65,5 @@ func (input SimulationInput) CurrentAmount() int64 {
 
 // 年利から月利を計算して返す
 func (input SimulationInput) MonthlyRate() float64 {
-	return input.AnnualYieldPercentage / 100 / 12
+	return math.Pow(1+input.AnnualYieldPercentage/100, 1.0/12.0) - 1
 }

@@ -52,21 +52,15 @@ go mod tidy
 
 ## Usage
 
-MVP段階では、以下のような CLI 実行を想定しています。
+MVP段階では、以下のように CLI からオプション指定で実行できます。
 
 ```bash
-go run ./cmd/asset-simulator
-```
-
-将来的には、以下のようなオプション指定で実行できる形を目指します。
-
-```bash
-asset-simulator \
+go run ./cmd/asset-simulator \
   --principal 1000000 \
   --current-profit 100000 \
-  --years-invested 3 \
+  --invested-years 3 \
   --monthly-contribution 50000 \
-  --annual-return-rate 5
+  --annual-yield-rate 5
 ```
 
 想定出力例：
