@@ -1,0 +1,105 @@
+#!/bin/sh
+
+# メインブランチへの直コミットを禁止
+if [ "$(git symbolic-ref HEAD | sed -e 's:^refs/heads/::')" = "main" ]; then
+    echo "\033[0;31m メインブランチへの直コミットはできません。 \033[0;39m"
+    echo "cannot commit on main branch."
+    exit 1
+fi
+
+# git管理のルートディレクトリに移動
+cd "$(git rev-parse --show-toplevel)"
+
+# ステージング済みの .go ファイルのみを取得（追加・変更・コピーのみ）
+staged_go_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$')
+
+# ステージング済みの .go ファイルがない場合はスキップ
+if [ -z "$staged_go_files" ]; then
+    echo "ステージング済みの .go ファイルがないため、チェックをスキップします。"
+    exit 0
+fi
+
+echo "対象ファイル:"
+echo "$staged_go_files"
+echo ""
+
+# ステージング済みファイルからパッケージ一覧を取得（main.goは除外）
+staged_packages=$(echo "$staged_go_files" | grep -v '/main\.go$' | grep -v '^main\.go$' | xargs -n1 dirname 2>/dev/null | sort -u)
+
+# --- go test ---
+echo "=== go test ==="
+if [ -n "$staged_packages" ]; then
+    for pkg in $staged_packages; do
+        echo "--- テスト実行: $pkg ---"
+        if ! go test -v "./$pkg"; then
+            echo "\033[0;31m go test failed. commit aborted. \033[0;39m"
+            exit 1
+        fi
+    done
+    echo "all tests passed"
+else
+    echo "テスト対象のパッケージがないため、スキップします。"
+fi
+echo ""
+
+# --- go vet ---
+echo "=== go vet ==="
+if [ -n "$staged_packages" ]; then
+    for pkg in $staged_packages; do
+        echo "--- go vet 実行: $pkg ---"
+        vet_err=$(go vet "./$pkg" 2>&1)
+        if [ -n "$vet_err" ]; then
+            echo "\033[0;31m go vet error: $pkg \033[0;39m"
+            echo "$vet_err"
+            exit 1
+        fi
+    done
+else
+    echo "go vet 対象のパッケージがないため、スキップします。"
+fi
+echo "finish go vet"
+echo ""
+
+# --- gofmt ---
+echo "=== gofmt ==="
+formatted=0
+for file in $staged_go_files; do
+    if [ -e "$file" ]; then
+        # フォーマットが必要か確認
+        result=$(gofmt -l "$file" 2>&1)
+        if [ -n "$result" ]; then
+            echo "フォーマット実行: $file"
+            gofmt -w "$file"
+            git add "$file"
+            formatted=1
+        fi
+    fi
+done
+
+if [ "$formatted" -eq 1 ]; then
+    echo "自動フォーマットを適用し、ステージングに追加しました。"
+fi
+echo "finish gofmt"
+echo ""
+
+# --- revive ---
+echo "=== revive ==="
+revive_failed=0
+for file in $staged_go_files; do
+    if [ -e "$file" ]; then
+        rv_err=$(revive -config reviveConfig.toml -formatter friendly "$file" 2>&1)
+        if [ -n "$rv_err" ]; then
+            echo "\033[0;31m revive error: $file \033[0;39m"
+            echo "$rv_err"
+            revive_failed=1
+        fi
+    fi
+done
+
+if [ "$revive_failed" -eq 1 ]; then
+    echo "\033[0;31m lintエラーを修正してください。 \033[0;39m"
+    exit 1
+fi
+echo "finish revive"
+
+exit 0
