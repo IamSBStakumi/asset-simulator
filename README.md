@@ -40,7 +40,7 @@ MVPで想定している機能は以下です。
 
 ## Requirements
 
-- Go 1.22 以上
+- Go 1.26以上
 
 ## Setup
 
@@ -52,7 +52,7 @@ go mod tidy
 
 ## Usage
 
-MVP段階では、以下のようなCLI実行を想定しています。
+MVP段階では、以下のような CLI 実行を想定しています。
 
 ```bash
 go run ./cmd/asset-simulator
@@ -64,6 +64,7 @@ go run ./cmd/asset-simulator
 asset-simulator \
   --principal 1000000 \
   --current-profit 100000 \
+  --years-invested 3 \
   --monthly-contribution 50000 \
   --annual-return-rate 5
 ```
@@ -84,54 +85,139 @@ asset-simulator \
 
 ## Project Structure
 
-```txt
-asset-simulator/
-├── cmd/
-│   └── asset-simulator/
-│       └── main.go
-├── internal/
-│   ├── app/
-│   │   └── cli.go
-│   ├── domain/
-│   │   └── simulation.go
-│   └── usecase/
-│       └── simulate_assets.go
-├── docs/
-│   ├── requirements.md
-│   └── flowchart.md
-├── go.mod
-├── README.md
-└── .gitignore
-```
+[ディレクトリ構成図](./docs/directory_architecture.md)
 
 ## Architecture Policy
 
-CLI固有の処理と、資産シミュレーションの計算ロジックを分離します。
+本プロジェクトは、将来的な機能追加や API 化を見据えて、モジュラーモノリス構成で設計します。
+
+各機能は `internal/modules/<module_name>` 配下に分離します。
 
 ```txt
-cmd/main.go
+internal/modules/<module_name>/
+├── interface/   # モジュール外に公開する入口
+└── internal/    # モジュール内部の実装詳細
+    ├── domain/  # ドメインモデル・計算ルール
+    └── usecase/ # アプリケーション固有の処理手順
+```
+
+MVP段階では `simulation` モジュールのみを作成します。
+
+```txt
+cmd/asset-simulator/main.go
   ↓
 internal/app/cli.go
   ↓
-internal/usecase/simulate_assets.go
+internal/modules/simulation/interface/service.go
   ↓
-internal/domain/simulation.go
+internal/modules/simulation/internal/usecase/simulate_assets.go
+  ↓
+internal/modules/simulation/internal/domain/calculator.go
 ```
 
-この構成にすることで、将来的にAPI化する場合でも、  
-`usecase` と `domain` のロジックを再利用しやすくします。
+CLI固有の処理は `internal/app` に置きます。
 
-API化する場合の想定構成：
+一方で、資産シミュレーションの中核ロジックは `internal/modules/simulation/internal` に閉じ込めます。  
+`app` 層や将来追加する API 層からは、`simulation/interface` のみを呼び出す方針です。
+
+これにより、外部からモジュール内部の `domain` や `usecase` に直接依存することを避け、モジュール単位で変更しやすい構成にします。
+
+## Module Design
+
+### interface
+
+`interface` は、モジュール外に公開する入口です。
+
+```txt
+internal/modules/simulation/interface/
+├── input.go
+├── output.go
+├── presenter.go
+└── service.go
+```
+
+主な責務は以下です。
+
+- CLI や API から受け取る入力値の定義
+- CLI や API へ返す出力値の定義
+- モジュール内部の usecase 呼び出し
+- 出力形式の整形
+
+`app` 層からは、基本的にこの `interface` 配下のみを参照します。
+
+例：
+
+```go
+import simulation "github.com/IamSBStakumi/asset-simulator/internal/modules/simulation/interface"
+```
+
+### internal
+
+`internal` は、モジュール内部の実装詳細です。
+
+```txt
+internal/modules/simulation/internal/
+├── domain/
+│   ├── calculator.go
+│   ├── input.go
+│   └── result.go
+└── usecase/
+    └── simulate_assets.go
+```
+
+`domain` には、資産シミュレーションの計算ルールやドメインモデルを配置します。
+
+`usecase` には、入力値を受け取り、ドメインロジックを使ってシミュレーション結果を組み立てる処理を配置します。
+
+モジュール外からは、以下のような直接参照を避けます。
+
+```go
+import "github.com/IamSBStakumi/asset-simulator/internal/modules/simulation/internal/domain"
+import "github.com/IamSBStakumi/asset-simulator/internal/modules/simulation/internal/usecase"
+```
+
+## Future API Design
+
+将来的に API を追加する場合も、`simulation` モジュールの `interface` を利用します。
 
 ```txt
 cmd/api/main.go
   ↓
 internal/app/api.go
   ↓
-internal/usecase/simulate_assets.go
+internal/modules/simulation/interface/service.go
   ↓
-internal/domain/simulation.go
+internal/modules/simulation/internal/usecase/simulate_assets.go
+  ↓
+internal/modules/simulation/internal/domain/calculator.go
 ```
+
+API 用の request / response と CLI 用の入出力形式が異なる場合でも、  
+`simulation/interface` を境界として変換することで、`domain` や `usecase` への影響を抑えます。
+
+## Future Modules
+
+今後、機能が増えた場合は、以下のようにモジュールを追加します。
+
+```txt
+internal/modules/
+├── simulation/
+├── scenario/
+├── tax/
+└── inflation/
+```
+
+想定する責務は以下です。
+
+| Module       | Responsibility                       |
+| ------------ | ------------------------------------ |
+| `simulation` | 将来資産額の計算                     |
+| `scenario`   | 複数条件でのシナリオ比較             |
+| `tax`        | 税金・控除を考慮した計算             |
+| `inflation`  | インフレ率を考慮した実質資産額の算出 |
+
+MVP段階では `simulation` のみを実装します。  
+`tax` や `inflation` は、必要になった時点で追加します。
 
 ## MVP Scope
 
@@ -152,6 +238,7 @@ internal/domain/simulation.go
 - 手数料計算
 - 為替考慮
 - インフレ率考慮
+- 複数シナリオ比較
 
 ## Calculation Policy
 
