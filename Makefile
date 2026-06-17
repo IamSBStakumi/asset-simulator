@@ -8,6 +8,9 @@ setup:
 	git config --local core.hooksPath .githooks
 	chmod +x .githooks/pre-commit
 
+run-cli:
+	go run ./cmd/asset-simulator
+
 lintAll:
 	go vet ./...
 	go fmt ./...
