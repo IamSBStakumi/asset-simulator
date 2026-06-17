@@ -2,13 +2,13 @@ package domain
 
 import "errors"
 
-type SimulationInput struct{
-	PrincipalAmount int64	// 現在の元本
-	CurrentProfit 	int64	// 現在の利益
-	AccumulatedYears int	// 投資年数
-	MonthlyContribution int64 // 毎月の積立額
+type SimulationInput struct {
+	PrincipalAmount       int64   // 現在の元本
+	CurrentProfit         int64   // 現在の利益
+	AccumulatedYears      int     // 投資年数
+	MonthlyContribution   int64   // 毎月の積立額
 	AnnualYieldPercentage float64 // 利回り
-	ProjectionYears []int	// 結果出力対象の年数
+	ProjectionYears       []int   // 結果出力対象の年数
 }
 
 func DefaultProjectionYears() []int {
@@ -62,5 +62,5 @@ func (input SimulationInput) CurrentAmount() int64 {
 
 // 年利から月利を計算して返す
 func (input SimulationInput) MonthlyRate() float64 {
-	return input.AnnualYieldPercentage / 100 /12
+	return input.AnnualYieldPercentage / 100 / 12
 }

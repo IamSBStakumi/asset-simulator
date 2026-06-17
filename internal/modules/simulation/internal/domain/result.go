@@ -5,8 +5,8 @@ type SimulationResult struct {
 }
 
 type SimulationResultRow struct {
-	Year int
+	Year        int
 	TotalAmount int64
-	Principal int64
-	Profit	int64
+	Principal   int64
+	Profit      int64
 }

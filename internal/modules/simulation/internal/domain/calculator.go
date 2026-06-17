@@ -6,13 +6,13 @@ type Calculator struct {
 	input SimulationInput
 }
 
-func NewCalculator(input SimulationInput) *Calculator{
+func NewCalculator(input SimulationInput) *Calculator {
 	return &Calculator{
 		input: input,
 	}
 }
 
-func (c *Calculator) Calculate() []SimulationResultRow{
+func (c *Calculator) Calculate() []SimulationResultRow {
 	rowsByYear := c.calculateRowsByYear()
 
 	return c.buildRows(rowsByYear)
@@ -40,7 +40,6 @@ func (c *Calculator) calculateRowsByYear() map[int]SimulationResultRow {
 
 	return rowsByYear
 }
-
 
 // buildRows は、指定された出力対象年数の順序に合わせて結果を並べます。
 func (c *Calculator) buildRows(rowsByYear map[int]SimulationResultRow) []SimulationResultRow {
