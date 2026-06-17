@@ -52,15 +52,27 @@ go mod tidy
 
 ## Usage
 
-MVP段階では、以下のように CLI からオプション指定で実行できます。
+将来資産シミュレーションは、以下のように CLI からオプション指定で実行できます。
 
 ```bash
 go run ./cmd/asset-simulator \
+  --mode simulate \
   --principal 1000000 \
   --current-profit 100000 \
   --invested-years 3 \
   --monthly-contribution 50000 \
   --annual-yield-rate 5
+```
+
+現在の元本・利益・積立月数・毎月積立額から利回りを逆算する場合は、`return-rate` モードを指定します。
+
+```bash
+go run ./cmd/asset-simulator \
+  --mode return-rate \
+  --principal 1200000 \
+  --current-profit 100000 \
+  --accumulated-months 24 \
+  --monthly-contribution 50000
 ```
 
 想定出力例：
