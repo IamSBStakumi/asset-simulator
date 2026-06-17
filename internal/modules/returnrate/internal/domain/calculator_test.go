@@ -17,7 +17,7 @@ func TestCalculatorCalculate(t *testing.T) {
 		expectedAnnualRate  float64
 	}{
 		{
-			name: "zero yield when current amount equals total principal",
+			name: "現在資産額が元本合計と同じ場合は利回りが0になる",
 			input: CalculationInput{
 				PrincipalAmount:     2_200_000,
 				CurrentProfit:       0,
@@ -28,7 +28,7 @@ func TestCalculatorCalculate(t *testing.T) {
 			expectedAnnualRate:  0,
 		},
 		{
-			name: "positive yield",
+			name: "利回りがプラスになる",
 			input: inputForMonthlyRate(
 				1_000_000,
 				100_000,
@@ -39,7 +39,7 @@ func TestCalculatorCalculate(t *testing.T) {
 			expectedAnnualRate:  (math.Pow(1.01, 12) - 1) * 100,
 		},
 		{
-			name: "negative yield",
+			name: "利回りがマイナスになる",
 			input: inputForMonthlyRate(
 				1_000_000,
 				100_000,

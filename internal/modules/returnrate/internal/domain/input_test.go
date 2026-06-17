@@ -15,7 +15,7 @@ func TestCalculationInputValidate(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			name: "valid with initial principal and monthly contribution",
+			name: "初期元本と毎月の積立額がある場合は有効",
 			input: CalculationInput{
 				PrincipalAmount:     2_200_000,
 				CurrentProfit:       100_000,
@@ -24,7 +24,7 @@ func TestCalculationInputValidate(t *testing.T) {
 			},
 		},
 		{
-			name: "valid with initial principal only",
+			name: "初期元本のみの場合は有効",
 			input: CalculationInput{
 				PrincipalAmount:     1_000_000,
 				CurrentProfit:       0,
@@ -33,7 +33,7 @@ func TestCalculationInputValidate(t *testing.T) {
 			},
 		},
 		{
-			name: "negative principal amount",
+			name: "元本がマイナスの場合はエラー",
 			input: CalculationInput{
 				PrincipalAmount:     -1,
 				CurrentProfit:       0,
@@ -43,7 +43,7 @@ func TestCalculationInputValidate(t *testing.T) {
 			expectedErr: "元本は0以上で入力してください",
 		},
 		{
-			name: "negative current amount",
+			name: "現在資産額がマイナスの場合はエラー",
 			input: CalculationInput{
 				PrincipalAmount:     100,
 				CurrentProfit:       -101,
@@ -53,7 +53,7 @@ func TestCalculationInputValidate(t *testing.T) {
 			expectedErr: "現在資産額は0以上で入力してください",
 		},
 		{
-			name: "zero accumulated months",
+			name: "積立月数が0の場合はエラー",
 			input: CalculationInput{
 				PrincipalAmount:     100,
 				CurrentProfit:       0,
@@ -63,7 +63,7 @@ func TestCalculationInputValidate(t *testing.T) {
 			expectedErr: "積立月数は1以上で入力してください",
 		},
 		{
-			name: "negative monthly contribution",
+			name: "毎月の積立額がマイナスの場合はエラー",
 			input: CalculationInput{
 				PrincipalAmount:     100,
 				CurrentProfit:       0,
@@ -73,7 +73,7 @@ func TestCalculationInputValidate(t *testing.T) {
 			expectedErr: "毎月の積立額は0以上で入力してください",
 		},
 		{
-			name: "principal less than total contribution",
+			name: "元本が積立額合計より小さい場合はエラー",
 			input: CalculationInput{
 				PrincipalAmount:     1_199_999,
 				CurrentProfit:       0,
@@ -83,7 +83,7 @@ func TestCalculationInputValidate(t *testing.T) {
 			expectedErr: "元本は毎月の積立額と積立月数の合計以上で入力してください",
 		},
 		{
-			name: "no initial principal and no monthly contribution",
+			name: "初期元本も毎月の積立額もない場合はエラー",
 			input: CalculationInput{
 				PrincipalAmount:     0,
 				CurrentProfit:       0,
