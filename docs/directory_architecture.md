@@ -26,8 +26,8 @@ asset-simulator/
 │       └── money/
 │           └── formatter.go
 ├── docs/
-│   ├── mvp_requirements.md
-│   └── flowchart.md
+│   ├── directory_architecture.md
+│   └── mvp_requirements.md
 ├── go.mod
 ├── README.md
 └── .gitignore
