@@ -11,6 +11,9 @@ setup:
 run-cli:
 	go run ./cmd/asset-simulator
 
+build-cli:
+	go build -o assetsim ./cmd/asset-simulator
+
 lintAll:
 	go vet ./...
 	go fmt ./...
