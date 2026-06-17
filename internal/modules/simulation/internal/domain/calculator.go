@@ -2,26 +2,22 @@ package domain
 
 import "math"
 
-type Calculator struct {
-	input SimulationInput
+type Calculator struct{}
+
+func NewCalculator() *Calculator {
+	return &Calculator{}
 }
 
-func NewCalculator(input SimulationInput) *Calculator {
-	return &Calculator{
-		input: input,
-	}
+func (c *Calculator) Calculate(input SimulationInput) []SimulationResultRow {
+	rowsByYear := c.calculateRowsByYear(input)
+
+	return c.buildRows(input, rowsByYear)
 }
 
-func (c *Calculator) Calculate() []SimulationResultRow {
-	rowsByYear := c.calculateRowsByYear()
-
-	return c.buildRows(rowsByYear)
-}
-
-func (c *Calculator) calculateRowsByYear() map[int]SimulationResultRow {
-	amount := float64(c.input.CurrentAmount())
-	monthlyRate := c.input.MonthlyRate()
-	maxYear := maxInt(c.input.ProjectionYears)
+func (c *Calculator) calculateRowsByYear(input SimulationInput) map[int]SimulationResultRow {
+	amount := float64(input.CurrentAmount())
+	monthlyRate := input.MonthlyRate()
+	maxYear := maxInt(input.ProjectionYears)
 
 	rowsByYear := make(map[int]SimulationResultRow, maxYear)
 
@@ -29,12 +25,12 @@ func (c *Calculator) calculateRowsByYear() map[int]SimulationResultRow {
 		amount = calculateNextMonthAmount(
 			amount,
 			monthlyRate,
-			c.input.MonthlyContribution,
+			input.MonthlyContribution,
 		)
 
 		if isEndOfYear(month) {
 			year := monthToYear(month)
-			rowsByYear[year] = c.buildResultRow(year, month, amount)
+			rowsByYear[year] = c.buildResultRow(input, year, month, amount)
 		}
 	}
 
@@ -42,10 +38,10 @@ func (c *Calculator) calculateRowsByYear() map[int]SimulationResultRow {
 }
 
 // buildRows は、指定された出力対象年数の順序に合わせて結果を並べます。
-func (c *Calculator) buildRows(rowsByYear map[int]SimulationResultRow) []SimulationResultRow {
-	rows := make([]SimulationResultRow, 0, len(c.input.ProjectionYears))
+func (*Calculator) buildRows(input SimulationInput, rowsByYear map[int]SimulationResultRow) []SimulationResultRow {
+	rows := make([]SimulationResultRow, 0, len(input.ProjectionYears))
 
-	for _, year := range c.input.ProjectionYears {
+	for _, year := range input.ProjectionYears {
 		rows = append(rows, rowsByYear[year])
 	}
 
@@ -53,13 +49,14 @@ func (c *Calculator) buildRows(rowsByYear map[int]SimulationResultRow) []Simulat
 }
 
 // buildResultRow は、指定年数時点のシミュレーション結果を生成します。
-func (c *Calculator) buildResultRow(
+func (*Calculator) buildResultRow(
+	input SimulationInput,
 	year int,
 	elapsedMonths int,
 	amount float64,
 ) SimulationResultRow {
 	totalAmount := int64(math.Round(amount))
-	principal := c.input.PrincipalAmount + c.input.MonthlyContribution*int64(elapsedMonths)
+	principal := input.PrincipalAmount + input.MonthlyContribution*int64(elapsedMonths)
 
 	return SimulationResultRow{
 		Year:        year,

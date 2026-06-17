@@ -1,9 +1,13 @@
 package domain
 
-type Simulator struct{}
+type Simulator struct {
+	calc Calculator
+}
 
-func NewSimulator() *Simulator {
-	return &Simulator{}
+func NewSimulator(calc Calculator) *Simulator {
+	return &Simulator{
+		calc: calc,
+	}
 }
 
 func (s *Simulator) Simulate(input SimulationInput) (SimulationResult, error) {
@@ -14,18 +18,9 @@ func (s *Simulator) Simulate(input SimulationInput) (SimulationResult, error) {
 	}
 
 	// calculate
+	rowsByYear := s.calc.Calculate(normalizedInput)
 
-	return SimulationResult{}, nil
-}
-
-func max(values []int) int {
-	maxValue := values[0]
-
-	for _, value := range values {
-		if value > maxValue {
-			maxValue = value
-		}
-	}
-
-	return maxValue
+	return SimulationResult{
+		Rows: rowsByYear,
+	}, nil
 }
